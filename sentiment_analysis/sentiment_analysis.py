@@ -206,14 +206,27 @@ def write_to_csv(company, data, base_path):
     headers = ["Date"]
     model_names = ["albert", "xlnet", "ernie", "bert", "distilbert", "roberta"]
     for model_name in model_names:
-        headers.extend([f"{model_name}_positive", f"{model_name}_neutral", f"{model_name}_negative"])
+        headers.extend([f"{model_name}_positive", f"{model_name}_negative"])
 
     csv_file = os.path.join(base_path, f"{company}_sentiment.csv")
+    month = {"jan":"01", 
+             "feb":"02",
+             "mar":"03",
+             "apr":"04",
+             "may":"05",
+             "jun":"06",
+             "jul":"07",
+             "aug":"08",
+             "sep":"09",
+             "oct":"10",
+             "nov":"11",
+             "dec":"12"}
     with open(csv_file, mode='w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
         writer.writerow(headers)
         for title, scores in data:
-            date = '-'.join(title.split("-")[:-1])
+            l_date = title.split("-")
+            date = '-'.join([l_date[0], month[l_date[1].lower()], l_date[2]])
             row = [date]
             for model_name in model_names:
                 row.extend(scores.get(model_name, [None, None, None]))
@@ -237,6 +250,7 @@ def process_transcripts(base_path):
                 if company not in results:
                     results[company] = []
                 results[company].append((file, sentiment_scores))
+    # print(results)
 
     # Write each company's results to its own CSV file
     for company, data in results.items():
