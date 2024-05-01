@@ -105,6 +105,7 @@ import os
 import torch
 import csv
 from tqdm import tqdm
+import pandas as pd
 from transformers import AlbertTokenizer, AlbertForSequenceClassification
 from transformers import XLNetTokenizer, XLNetForSequenceClassification
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
@@ -180,9 +181,9 @@ def load_models():
         "albert": "albert-base-v2" ,
         "xlnet": "xlnet-base-cased",
         "ernie": "nghuyong/ernie-2.0-en",
-        "bert": "bert-base-uncased",
-        "distilbert": "distilbert-base-uncased",
-        "roberta": "roberta-base"
+        "bert": "bert-large-uncased",
+        "roberta": "cardiffnlp/twitter-roberta-base-sentiment",
+        "distilbert": "distilbert-base-uncased-finetuned-sst-2-english"
     }
     tokenizers_and_models = {}
     for model_name, model_path in models.items():
@@ -199,12 +200,12 @@ def compute_sentiments(text, tokenizers_and_models):
             outputs = model(**inputs)
         logits = outputs.logits
         scores = torch.nn.functional.softmax(logits, dim=-1).squeeze().tolist()
-        results[model_name] = scores
+        results[model_name] = [scores[0], scores[-1]]
     return results
 
 def write_to_csv(company, data, base_path):
     headers = ["Date"]
-    model_names = ["albert", "xlnet", "ernie", "bert", "distilbert", "roberta"]
+    model_names = ["xlnet", "ernie", "bert", "distilbert", "roberta"]
     for model_name in model_names:
         headers.extend([f"{model_name}_positive", f"{model_name}_negative"])
 
@@ -256,6 +257,5 @@ def process_transcripts(base_path):
     for company, data in results.items():
         write_to_csv(company, data, base_path)
 
-# Usage
 base_path = "./../dataset_transcript/Transcripts"
 process_transcripts(base_path)
